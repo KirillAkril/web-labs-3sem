@@ -82,6 +82,7 @@
             <a href="{{ route('about') }}">О нас</a>
             <a href="{{ route('contacts') }}">Контакты</a>
             <a href="{{ route('signin.form') }}">Регистрация</a>
+            <a href="{{ route('articles.index') }}">Новости из БД</a>
         </nav>
 
 

@@ -1,4 +1,5 @@
 <?php
+use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MainController;
@@ -35,3 +36,5 @@ Route::get('/signin', [AuthController::class, 'create'])
 
 Route::post('/signin', [AuthController::class, 'registration'])
     ->name('signin');
+Route::get('/articles', [ArticleController::class, 'index'])
+    ->name('articles.index');
