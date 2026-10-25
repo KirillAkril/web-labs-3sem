@@ -52,7 +52,9 @@ class AuthController extends Controller
             $user = Auth::user();
 
             if ($user !== null) {
-                $user->createToken('web-login');
+                $token = $user->createToken('web-login')->plainTextToken;
+
+                $request->session()->put('auth_token', $token);
             }
 
             return redirect()->intended(route('home'));
@@ -73,6 +75,8 @@ class AuthController extends Controller
         if ($user !== null) {
             $user->tokens()->delete();
         }
+
+        $request->session()->forget('auth_token');
 
         Auth::logout();
 
