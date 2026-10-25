@@ -3,8 +3,8 @@
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MainController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CommentController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', [MainController::class, 'index'])
     ->name('home');
@@ -31,13 +31,14 @@ Route::view('/contacts', 'contacts', [
             'value' => 'Ул. Пушкина, д. 67',
         ],
     ],
-
 ])->name('contacts');
+
 Route::get('/signin', [AuthController::class, 'create'])
     ->name('signin.form');
 
 Route::post('/signin', [AuthController::class, 'registration'])
     ->name('signin');
+
 Route::get('/login', [AuthController::class, 'loginForm'])
     ->name('login');
 
@@ -46,10 +47,30 @@ Route::post('/login', [AuthController::class, 'login'])
 
 Route::post('/logout', [AuthController::class, 'logout'])
     ->name('logout');
+
 Route::resource('articles', ArticleController::class)
     ->except(['index', 'show'])
     ->middleware('auth:sanctum');
 
 Route::resource('articles', ArticleController::class)
     ->only(['index', 'show']);
-    
+
+Route::post('/articles/{article}/comments', [CommentController::class, 'store'])
+    ->middleware('auth:sanctum')
+    ->name('comments.store');
+
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+    ->middleware('auth:sanctum')
+    ->name('comments.destroy');
+
+Route::get('/comments/moderation', [CommentController::class, 'moderation'])
+    ->middleware('auth:sanctum')
+    ->name('comments.moderation');
+
+Route::patch('/comments/{comment}/approve', [CommentController::class, 'approve'])
+    ->middleware('auth:sanctum')
+    ->name('comments.approve');
+
+Route::delete('/comments/{comment}/reject', [CommentController::class, 'reject'])
+    ->middleware('auth:sanctum')
+    ->name('comments.reject');
