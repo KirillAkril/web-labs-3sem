@@ -48,6 +48,13 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            if ($user !== null) {
+                $user->createToken('web-login');
+            }
+
             return redirect()->intended(route('home'));
         }
 
@@ -60,6 +67,13 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+
+        if ($user !== null) {
+            $user->tokens()->delete();
+        }
+
         Auth::logout();
 
         $request->session()->invalidate();
