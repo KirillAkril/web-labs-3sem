@@ -1,8 +1,9 @@
 <?php
+
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MainController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', [MainController::class, 'index'])
     ->name('home');
@@ -36,4 +37,17 @@ Route::get('/signin', [AuthController::class, 'create'])
 
 Route::post('/signin', [AuthController::class, 'registration'])
     ->name('signin');
-Route::resource('articles', ArticleController::class);
+Route::get('/login', [AuthController::class, 'loginForm'])
+    ->name('login');
+
+Route::post('/login', [AuthController::class, 'login'])
+    ->name('login.submit');
+
+Route::post('/logout', [AuthController::class, 'logout'])
+    ->name('logout');
+Route::resource('articles', ArticleController::class)
+    ->except(['index', 'show'])
+    ->middleware('auth:sanctum');
+
+Route::resource('articles', ArticleController::class)
+    ->only(['index', 'show']);
