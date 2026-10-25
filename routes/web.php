@@ -4,6 +4,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MainController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CommentController;
 
 Route::get('/', [MainController::class, 'index'])
     ->name('home');
@@ -51,3 +52,13 @@ Route::resource('articles', ArticleController::class)
 
 Route::resource('articles', ArticleController::class)
     ->only(['index', 'show']);
+
+// Добавление комментария
+Route::post('/articles/{article}/comments', [CommentController::class, 'store'])
+    ->middleware('auth:sanctum')
+    ->name('comments.store');
+
+// Удаление комментария
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+    ->middleware('auth:sanctum')
+    ->name('comments.destroy');

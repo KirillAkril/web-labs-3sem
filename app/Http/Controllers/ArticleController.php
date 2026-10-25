@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ArticleController extends Controller
 {
+    use AuthorizesRequests;
+
     // Список статей с пагинацией
     public function index()
     {
@@ -18,12 +21,16 @@ class ArticleController extends Controller
     // Форма создания статьи
     public function create()
     {
+        $this->authorize('create', Article::class);
+
         return view('articles.create');
     }
 
     // Сохранение новой статьи
     public function store(Request $request)
     {
+        $this->authorize('create', Article::class);
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:1000'],
@@ -46,12 +53,16 @@ class ArticleController extends Controller
     // Форма редактирования
     public function edit(Article $article)
     {
+        $this->authorize('update', $article);
+
         return view('articles.edit', compact('article'));
     }
 
     // Обновление статьи
     public function update(Request $request, Article $article)
     {
+        $this->authorize('update', $article);
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:1000'],
@@ -68,6 +79,8 @@ class ArticleController extends Controller
     // Удаление статьи
     public function destroy(Article $article)
     {
+        $this->authorize('delete', $article);
+
         $article->delete();
 
         return redirect()
