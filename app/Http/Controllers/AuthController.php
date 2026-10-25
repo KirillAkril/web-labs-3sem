@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,10 +23,13 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'min:8'],
         ]);
 
+        $readerRole = Role::where('name', 'reader')->firstOrFail();
+
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'role_id' => $readerRole->id,
         ]);
 
         return redirect()
