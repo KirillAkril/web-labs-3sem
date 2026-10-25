@@ -52,13 +52,4 @@ Route::resource('articles', ArticleController::class)
 
 Route::resource('articles', ArticleController::class)
     ->only(['index', 'show']);
-
-// Добавление комментария
-Route::post('/articles/{article}/comments', [CommentController::class, 'store'])
-    ->middleware('auth:sanctum')
-    ->name('comments.store');
-
-// Удаление комментария
-Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
-    ->middleware('auth:sanctum')
-    ->name('comments.destroy');
+    

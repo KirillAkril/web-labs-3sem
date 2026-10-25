@@ -77,25 +77,31 @@
     <header>
 
 
-        
-<nav>
-    <a href="{{ route('home') }}">Главная</a>
-    <a href="{{ route('about') }}">О нас</a>
-    <a href="{{ route('contacts') }}">Контакты</a>
-    <a href="{{ route('articles.index') }}">Новости из БД</a>
 
-    @auth
-        <form action="{{ route('logout') }}" method="POST" style="display: inline; margin: 0;">
-            @csrf
-            <button type="submit" style="background: none; border: none; padding: 0; color: white; font-size: 17px; font-family: inherit; cursor: pointer;">
-                Выйти
-            </button>
-        </form>
-    @else
-        <a href="{{ route('login') }}">Войти</a>
-        <a href="{{ route('signin.form') }}">Регистрация</a>
-    @endauth
-</nav>
+        <nav>
+            <a href="{{ route('home') }}">Главная</a>
+            <a href="{{ route('about') }}">О нас</a>
+            <a href="{{ route('contacts') }}">Контакты</a>
+            <a href="{{ route('articles.index') }}">Новости из БД</a>
+            @auth
+            @if (auth()->user()->role?->name === 'moderator')
+            <a href="{{ route('comments.moderation') }}">
+                Модерация комментариев
+            </a>
+            @endif
+            @endauth
+            @auth
+            <form action="{{ route('logout') }}" method="POST" style="display: inline; margin: 0;">
+                @csrf
+                <button type="submit" style="background: none; border: none; padding: 0; color: white; font-size: 17px; font-family: inherit; cursor: pointer;">
+                    Выйти
+                </button>
+            </form>
+            @else
+            <a href="{{ route('login') }}">Войти</a>
+            <a href="{{ route('signin.form') }}">Регистрация</a>
+            @endauth
+        </nav>
 
 
 

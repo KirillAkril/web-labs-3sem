@@ -29,4 +29,8 @@ class CommentPolicy
     {
         return $user->role?->name === 'moderator';
     }
+    public function moderate(User $user): bool
+    {
+        return $user->role?->name === 'moderator';
+    }
 }
