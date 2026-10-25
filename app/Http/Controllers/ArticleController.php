@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\VeryLongJob;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -44,17 +45,8 @@ class ArticleController extends Controller
         // Сохраняем новую статью в базе данных
         $article = Article::create($validated);
 
-        // Находим пользователя с ролью модератора
-        $moderator = User::whereHas('role', function ($query) {
-            $query->where('name', 'moderator');
-        })->first();
-
-        // Отправляем письмо модератору
-        if ($moderator && $moderator->email) {
-            Mail::to($moderator->email)->send(
-                new NewArticleMail($article)
-            );
-        }
+        // Добавляем отправку письма в очередь
+        VeryLongJob::dispatch($article);
 
         return redirect()
             ->route('articles.index')
