@@ -75,11 +75,15 @@
 <body>
 
     <header>
+
+
         <nav>
             <a href="{{ route('home') }}">Главная</a>
             <a href="{{ route('about') }}">О нас</a>
             <a href="{{ route('contacts') }}">Контакты</a>
         </nav>
+
+
     </header>
 
     <main>
