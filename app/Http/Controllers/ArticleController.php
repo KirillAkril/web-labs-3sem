@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Mail\NewArticleMail;
+use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 
 class ArticleController extends Controller
 {
@@ -27,6 +30,7 @@ class ArticleController extends Controller
     }
 
     // Сохранение новой статьи
+
     public function store(Request $request)
     {
         $this->authorize('create', Article::class);
@@ -37,7 +41,20 @@ class ArticleController extends Controller
             'content' => ['required', 'string'],
         ]);
 
-        Article::create($validated);
+        // Сохраняем новую статью в базе данных
+        $article = Article::create($validated);
+
+        // Находим пользователя с ролью модератора
+        $moderator = User::whereHas('role', function ($query) {
+            $query->where('name', 'moderator');
+        })->first();
+
+        // Отправляем письмо модератору
+        if ($moderator && $moderator->email) {
+            Mail::to($moderator->email)->send(
+                new NewArticleMail($article)
+            );
+        }
 
         return redirect()
             ->route('articles.index')
