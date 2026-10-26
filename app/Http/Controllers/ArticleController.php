@@ -20,14 +20,42 @@ class ArticleController extends Controller
     // Список статей с пагинацией
     public function index(Request $request)
     {
-        $page = $request->query('page', 1);
+        $page = max(1, (int) $request->query('page', 1));
 
-        $articles = Cache::remember(
-            'articles_page_' . $page,
+        $cachedData = Cache::remember(
+            'articles_page_ids_' . $page,
             60,
-            function () {
-                return Article::latest()->paginate(6);
+            function () use ($page) {
+                $paginator = Article::latest()->paginate(6, ['id'], 'page', $page);
+
+                return [
+                    'ids' => $paginator->getCollection()->pluck('id')->all(),
+                    'total' => $paginator->total(),
+                    'per_page' => $paginator->perPage(),
+                    'current_page' => $paginator->currentPage(),
+                ];
             }
+        );
+
+        $ids = $cachedData['ids'];
+
+        $articlesById = Article::whereIn('id', $ids)->get()->keyBy('id');
+
+        $articles = collect($ids)
+            ->map(fn($id) => $articlesById->get($id))
+            ->filter()
+            ->values();
+
+        $articles = new \Illuminate\Pagination\LengthAwarePaginator(
+            $articles,
+            $cachedData['total'],
+            $cachedData['per_page'],
+            $cachedData['current_page'],
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+                'pageName' => 'page',
+            ]
         );
 
         return view('articles.index', compact('articles'));
@@ -55,7 +83,7 @@ class ArticleController extends Controller
 
         // Сохраняем новую статью в базе данных
         $article = Article::create($validated);
-        Cache::forget('articles_page_1');
+        Cache::forget('articles_page_ids_1');
         // Добавляем отправку письма в очередь
         VeryLongJob::dispatch($article);
         // Находим всех пользователей с ролью читателя
@@ -76,17 +104,22 @@ class ArticleController extends Controller
     // Просмотр одной статьи
     public function show(Article $article)
     {
-        $article = Cache::rememberForever(
-            'article_' . $article->id,
+        $articleData = Cache::rememberForever(
+            'article_data_' . $article->id,
             function () use ($article) {
-                return Article::with([
-                    'comments' => function ($query) {
-                        $query->with('user')
-                            ->where('is_approved', true)
-                            ->latest();
-                    },
-                ])->findOrFail($article->id);
+                return Article::findOrFail($article->id)->getAttributes();
             }
+        );
+
+        $article = (new Article())->newFromBuilder($articleData);
+
+        $article->setRelation(
+            'comments',
+            \App\Models\Comment::with('user')
+                ->where('article_id', $article->id)
+                ->where('is_approved', true)
+                ->latest()
+                ->get()
         );
 
         return view('articles.show', compact('article'));

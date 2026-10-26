@@ -29,7 +29,7 @@ class CommentController extends Controller
             'content' => $validated['content'],
             'is_approved' => $isModerator,
         ]);
-        Cache::forget('article_' . $article->id);
+        Cache::forget('article_data_' . $article->id);
         $message = $isModerator
             ? 'Комментарий опубликован.'
             : 'Комментарий отправлен и ожидает модерации.';
@@ -61,7 +61,7 @@ class CommentController extends Controller
 
         $comment->update(['is_approved' => true]);
 
-        Cache::forget('article_' . $articleId);
+        Cache::forget('article_data_' . $articleId);
 
         return redirect()
             ->route('comments.moderation')
@@ -88,7 +88,7 @@ class CommentController extends Controller
         $article = $comment->article;
 
         $comment->delete();
-        Cache::forget('article_' . $article->id);
+        Cache::forget('article_data_' . $article->id);
         return redirect()
             ->route('articles.show', $article)
             ->with('success', 'Комментарий удалён.');
