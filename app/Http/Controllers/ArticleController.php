@@ -9,6 +9,8 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Mail\NewArticleMail;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
+use App\Notifications\NewArticleNotification;
+use Illuminate\Support\Facades\Notification;
 
 class ArticleController extends Controller
 {
@@ -47,7 +49,16 @@ class ArticleController extends Controller
 
         // Добавляем отправку письма в очередь
         VeryLongJob::dispatch($article);
+        // Находим всех пользователей с ролью читателя
+        $readers = User::whereHas('role', function ($query) {
+            $query->where('name', 'reader');
+        })->get();
 
+        // Отправляем читателям уведомления о новой статье
+        Notification::send(
+            $readers,
+            new NewArticleNotification($article)
+        );
         return redirect()
             ->route('articles.index')
             ->with('success', 'Статья успешно создана!');

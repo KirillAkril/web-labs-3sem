@@ -74,3 +74,26 @@ Route::patch('/comments/{comment}/approve', [CommentController::class, 'approve'
 Route::delete('/comments/{comment}/reject', [CommentController::class, 'reject'])
     ->middleware('auth:sanctum')
     ->name('comments.reject');
+
+Route::get('/notifications/unread', function (\Illuminate\Http\Request $request) {
+    $notifications = $request->user()
+        ->unreadNotifications()
+        ->latest()
+        ->get();
+
+    return response()->json([
+        'count' => $notifications->count(),
+        'notifications' => $notifications->map(function ($notification) {
+            return [
+                'id' => $notification->id,
+                'title' => $notification->data['title'] ?? 'Новая статья',
+                'url' => route('notifications.show', $notification->id),
+                'created_at' => $notification->created_at->format('d.m.Y H:i'),
+            ];
+        }),
+    ]);
+})->middleware('auth')->name('notifications.unread');
+Route::get('/notifications/{id}', [
+    \App\Http\Controllers\NotificationController::class,
+    'show',
+])->middleware('auth:sanctum')->name('notifications.show');

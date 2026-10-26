@@ -83,6 +83,45 @@
             <a href="{{ route('about') }}">О нас</a>
             <a href="{{ route('contacts') }}">Контакты</a>
             <a href="{{ route('articles.index') }}">Новости из БД</a>
+
+            @auth
+            @php
+            $unreadNotifications = auth()->user()
+            ->unreadNotifications()
+            ->latest()
+            ->get();
+            @endphp
+
+            <details style="position: relative;" id="notifications-menu">
+                <summary id="notifications-summary"
+                    style="color: white; cursor: pointer; font-size: 17px;">
+                    Уведомления ({{ $unreadNotifications->count() }})
+                </summary>
+
+                <div id="notifications-list"
+                    style="position: absolute; top: 28px; right: 0; z-index: 10;
+                    width: 320px; max-height: 350px; overflow-y: auto;
+                    background: white; color: #263238; padding: 12px;
+                    border-radius: 6px; box-shadow: 0 4px 12px #0003;">
+
+                    @forelse ($unreadNotifications as $notification)
+                    <div style="padding: 10px; border-bottom: 1px solid #ddd;">
+                        <a href="{{ route('notifications.show', $notification->id) }}"
+                            style="color: #243447; font-size: 15px;">
+                            {{ $notification->data['title'] ?? 'Новая статья' }}
+                        </a>
+
+                        <div style="font-size: 12px; margin-top: 4px;">
+                            {{ $notification->created_at->format('d.m.Y H:i') }}
+                        </div>
+                    </div>
+                    @empty
+                    <p>Непрочитанных уведомлений нет.</p>
+                    @endforelse
+                </div>
+            </details>
+            @endauth
+
             @auth
             @if (auth()->user()->role?->name === 'moderator')
             <a href="{{ route('comments.moderation') }}">
@@ -115,7 +154,72 @@
         <p>Демченко Кирилл Максимович</p>
         <p>Группа 251-3210</p>
     </footer>
+    @auth
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const summary = document.getElementById('notifications-summary');
+            const list = document.getElementById('notifications-list');
 
+            if (!summary || !list) {
+                return;
+            }
+
+            async function refreshNotifications() {
+                try {
+                    const response = await fetch(
+                        '/notifications/unread', {
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        }
+                    );
+
+                    if (!response.ok) {
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    summary.textContent = `Уведомления (${data.count})`;
+                    list.replaceChildren();
+
+                    if (data.notifications.length === 0) {
+                        const emptyMessage = document.createElement('p');
+                        emptyMessage.textContent = 'Непрочитанных уведомлений нет.';
+                        list.appendChild(emptyMessage);
+                        return;
+                    }
+
+                    data.notifications.forEach(function(notification) {
+                        const item = document.createElement('div');
+                        item.style.cssText =
+                            'padding: 10px; border-bottom: 1px solid #ddd;';
+
+                        const link = document.createElement('a');
+                        link.href = notification.url;
+                        link.textContent = notification.title;
+                        link.style.cssText =
+                            'color: #243447; font-size: 15px;';
+
+                        const date = document.createElement('div');
+                        date.textContent = notification.created_at;
+                        date.style.cssText =
+                            'font-size: 12px; margin-top: 4px;';
+
+                        item.appendChild(link);
+                        item.appendChild(date);
+                        list.appendChild(item);
+                    });
+                } catch (error) {
+                    console.error('Ошибка обновления уведомлений:', error);
+                }
+            }
+
+            refreshNotifications();
+            setInterval(refreshNotifications, 3000);
+        });
+    </script>
+    @endauth
 </body>
 
 </html>
