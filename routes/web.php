@@ -52,8 +52,11 @@ Route::resource('articles', ArticleController::class)
     ->except(['index', 'show'])
     ->middleware('auth:sanctum');
 
+
 Route::resource('articles', ArticleController::class)
-    ->only(['index', 'show']);
+    ->only(['index', 'show'])
+    ->middleware(\App\Http\Middleware\TrackArticleView::class);
+
 
 Route::post('/articles/{article}/comments', [CommentController::class, 'store'])
     ->middleware('auth:sanctum')
