@@ -4,9 +4,11 @@
 
 @section('content')
 <h1>Новости и статьи</h1>
+@can('create', \App\Models\Article::class)
 <p>
     <a href="{{ route('articles.create') }}">+ Добавить статью</a>
 </p>
+@endcan
 
 @if (session('success'))
 <p class="success-message">{{ session('success') }}</p>
@@ -39,10 +41,13 @@
                 Открыть
             </a>
 
+            @can('update', $article)
             <a href="{{ route('articles.edit', $article) }}">
                 Редактировать
             </a>
+            @endcan
 
+            @can('delete', $article)
             <form
                 action="{{ route('articles.destroy', $article) }}"
                 method="POST"
@@ -52,6 +57,7 @@
 
                 <button type="submit">Удалить</button>
             </form>
+            @endcan
         </div>
 
     </article>
