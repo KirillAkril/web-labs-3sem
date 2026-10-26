@@ -65,11 +65,7 @@
         @endforeach
     </div>
     @endif
-    @forelse ($article->comments()
-    ->with('user')
-    ->where('is_approved', true)
-    ->latest()
-    ->get() as $comment)
+    @forelse ($article->comments as $comment)
     <div class="comment">
         <p>
             <strong>{{ $comment->user->name }}</strong>

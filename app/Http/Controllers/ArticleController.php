@@ -11,15 +11,24 @@ use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use App\Notifications\NewArticleNotification;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Cache;
 
 class ArticleController extends Controller
 {
     use AuthorizesRequests;
 
     // Список статей с пагинацией
-    public function index()
+    public function index(Request $request)
     {
-        $articles = Article::latest()->paginate(6);
+        $page = $request->query('page', 1);
+
+        $articles = Cache::remember(
+            'articles_page_' . $page,
+            60,
+            function () {
+                return Article::latest()->paginate(6);
+            }
+        );
 
         return view('articles.index', compact('articles'));
     }
@@ -46,7 +55,7 @@ class ArticleController extends Controller
 
         // Сохраняем новую статью в базе данных
         $article = Article::create($validated);
-
+        Cache::forget('articles_page_1');
         // Добавляем отправку письма в очередь
         VeryLongJob::dispatch($article);
         // Находим всех пользователей с ролью читателя
@@ -67,6 +76,19 @@ class ArticleController extends Controller
     // Просмотр одной статьи
     public function show(Article $article)
     {
+        $article = Cache::rememberForever(
+            'article_' . $article->id,
+            function () use ($article) {
+                return Article::with([
+                    'comments' => function ($query) {
+                        $query->with('user')
+                            ->where('is_approved', true)
+                            ->latest();
+                    },
+                ])->findOrFail($article->id);
+            }
+        );
+
         return view('articles.show', compact('article'));
     }
 
@@ -90,7 +112,7 @@ class ArticleController extends Controller
         ]);
 
         $article->update($validated);
-
+        Cache::flush();
         return redirect()
             ->route('articles.index')
             ->with('success', 'Статья успешно обновлена!');
@@ -102,7 +124,7 @@ class ArticleController extends Controller
         $this->authorize('delete', $article);
 
         $article->delete();
-
+        Cache::flush();
         return redirect()
             ->route('articles.index')
             ->with('success', 'Статья удалена.');

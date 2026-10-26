@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Cache;
 
 class CommentController extends Controller
 {
@@ -28,7 +29,7 @@ class CommentController extends Controller
             'content' => $validated['content'],
             'is_approved' => $isModerator,
         ]);
-
+        Cache::forget('article_' . $article->id);
         $message = $isModerator
             ? 'Комментарий опубликован.'
             : 'Комментарий отправлен и ожидает модерации.';
@@ -56,7 +57,11 @@ class CommentController extends Controller
     {
         $this->authorize('moderate', Comment::class);
 
+        $articleId = $comment->article_id;
+
         $comment->update(['is_approved' => true]);
+
+        Cache::forget('article_' . $articleId);
 
         return redirect()
             ->route('comments.moderation')
@@ -83,7 +88,7 @@ class CommentController extends Controller
         $article = $comment->article;
 
         $comment->delete();
-
+        Cache::forget('article_' . $article->id);
         return redirect()
             ->route('articles.show', $article)
             ->with('success', 'Комментарий удалён.');
