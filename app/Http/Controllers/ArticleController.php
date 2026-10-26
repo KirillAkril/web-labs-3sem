@@ -18,20 +18,51 @@ class ArticleController extends Controller
     use AuthorizesRequests;
 
     // Список статей с пагинацией
+
+
     public function index(Request $request)
     {
-        $page = $request->query('page', 1);
+        $page = max(1, (int) $request->query('page', 1));
 
-        $articles = Cache::remember(
-            'articles_page_' . $page,
+        $articleIds = Cache::remember(
+            'articles_page_ids_' . $page,
             60,
-            function () {
-                return Article::latest()->paginate(6);
+            function () use ($page) {
+                return Article::latest()
+                    ->paginate(6, ['id'], 'page', $page)
+                    ->toArray();
             }
+        );
+
+        $paginatorData = $articleIds;
+
+        $ids = collect($paginatorData['data'])->pluck('id')->all();
+
+        $articles = Article::whereIn('id', $ids)
+            ->orderByRaw('CASE id ' .
+                implode(' ', array_map(
+                    fn($id, $index) => "WHEN {$id} THEN {$index}",
+                    $ids,
+                    array_keys($ids)
+                )) .
+                ' END')
+            ->get();
+
+        $articles = new \Illuminate\Pagination\LengthAwarePaginator(
+            $articles,
+            $paginatorData['total'],
+            $paginatorData['per_page'],
+            $paginatorData['current_page'],
+            [
+                'path' => route('articles.index'),
+                'pageName' => 'page',
+            ]
         );
 
         return view('articles.index', compact('articles'));
     }
+
+
 
     // Форма создания статьи
     public function create()
@@ -74,19 +105,28 @@ class ArticleController extends Controller
     }
 
     // Просмотр одной статьи
+
     public function show(Article $article)
     {
-        $article = Cache::rememberForever(
-            'article_' . $article->id,
+        $articleData = Cache::rememberForever(
+            'article_data_' . $article->id,
             function () use ($article) {
-                return Article::with([
-                    'comments' => function ($query) {
-                        $query->with('user')
-                            ->where('is_approved', true)
-                            ->latest();
-                    },
-                ])->findOrFail($article->id);
+                return Article::findOrFail($article->id)->getAttributes();
             }
+        );
+
+        $article = new Article();
+
+        $article->setRawAttributes($articleData, true);
+        $article->exists = true;
+
+        $article->setRelation(
+            'comments',
+            \App\Models\Comment::with('user')
+                ->where('article_id', $article->id)
+                ->where('is_approved', true)
+                ->latest()
+                ->get()
         );
 
         return view('articles.show', compact('article'));
