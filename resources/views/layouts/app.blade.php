@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title') | Мой сайт</title>
-
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         * {
             box-sizing: border-box;
@@ -83,7 +83,6 @@
             <a href="{{ route('about') }}">О нас</a>
             <a href="{{ route('contacts') }}">Контакты</a>
             <a href="{{ route('articles.index') }}">Новости из БД</a>
-
             @auth
             @php
             $unreadNotifications = auth()->user()
@@ -145,7 +144,7 @@
 
 
     </header>
-
+    <div id="app"></div>
     <main>
         @yield('content')
     </main>

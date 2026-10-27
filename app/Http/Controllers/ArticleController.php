@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Notifications\NewArticleNotification;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Cache;
+use App\Events\NewArticleEvent;
 
 class ArticleController extends Controller
 {
@@ -86,6 +87,11 @@ class ArticleController extends Controller
 
         // Сохраняем новую статью в базе данных
         $article = Article::create($validated);
+        // Отправляем событие о создании статьи через Pusher
+        event(new NewArticleEvent(
+            $article->id,
+            $article->title
+        ));
         Cache::forget('articles_page_1');
         // Добавляем отправку письма в очередь
         VeryLongJob::dispatch($article);
