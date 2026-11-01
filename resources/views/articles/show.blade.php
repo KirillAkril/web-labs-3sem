@@ -76,13 +76,13 @@
 
         <p>{{ $comment->content }}</p>
 
-        @can('update', $comment)
+        @can('update-comment', $comment)
         <a href="{{ route('comments.edit', $comment) }}">
             Редактировать
         </a>
         @endcan
 
-        @can('delete', $comment)
+        @can('delete-comment', $comment)
         <form
             action="{{ route('comments.destroy', $comment) }}"
             method="POST"
@@ -101,7 +101,7 @@
     @endforelse
 
     @auth
-    @can('create', [\App\Models\Comment::class, $article])
+    @can('create-comment')
     <h3>Добавить комментарий</h3>
 
     <form

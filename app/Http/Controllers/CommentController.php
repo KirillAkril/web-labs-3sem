@@ -5,18 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\Comment;
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 
 class CommentController extends Controller
 {
-    use AuthorizesRequests;
 
     // Добавление комментария к статье
 
     public function store(Request $request, Article $article)
     {
-        $this->authorize('create', [Comment::class, $article]);
+        Gate::authorize('create-comment');
 
         $validated = $request->validate([
             'content' => ['required', 'string', 'max:2000'],
@@ -42,7 +41,7 @@ class CommentController extends Controller
     // Список комментариев, ожидающих модерации
     public function moderation()
     {
-        $this->authorize('moderate', Comment::class);
+        Gate::authorize('moderate');
 
         $comments = Comment::with(['user', 'article'])
             ->where('is_approved', false)
@@ -55,7 +54,7 @@ class CommentController extends Controller
     // Принятие комментария
     public function approve(Comment $comment)
     {
-        $this->authorize('moderate', Comment::class);
+        Gate::authorize('moderate');
 
         $articleId = $comment->article_id;
 
@@ -71,7 +70,7 @@ class CommentController extends Controller
     // Отклонение комментария
     public function reject(Comment $comment)
     {
-        $this->authorize('moderate', Comment::class);
+        Gate::authorize('moderate');
 
         $comment->delete();
 
@@ -81,14 +80,14 @@ class CommentController extends Controller
     }
     public function edit(Comment $comment)
     {
-        $this->authorize('update', $comment);
+        Gate::authorize('update-comment', $comment);
 
         return view('comments.edit', compact('comment'));
     }
 
     public function update(Request $request, Comment $comment)
     {
-        $this->authorize('update', $comment);
+        Gate::authorize('update-comment', $comment);
 
         $validated = $request->validate([
             'content' => ['required', 'string', 'max:2000'],
@@ -107,7 +106,7 @@ class CommentController extends Controller
     // Удаление комментария модератором
     public function destroy(Comment $comment)
     {
-        $this->authorize('delete', $comment);
+        Gate::authorize('delete-comment', $comment);
 
         $article = $comment->article;
 

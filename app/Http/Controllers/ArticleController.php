@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Notifications\NewArticleNotification;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 
 class ArticleController extends Controller
 {
@@ -22,6 +23,8 @@ class ArticleController extends Controller
 
     public function index(Request $request)
     {
+        Gate::authorize('view-articles');
+
         $page = max(1, (int) $request->query('page', 1));
 
         $articleIds = Cache::remember(
@@ -108,6 +111,8 @@ class ArticleController extends Controller
 
     public function show(Article $article)
     {
+        Gate::authorize('view-article');
+
         $articleData = Cache::rememberForever(
             'article_data_' . $article->id,
             function () use ($article) {
