@@ -79,7 +79,31 @@ class CommentController extends Controller
             ->route('comments.moderation')
             ->with('success', 'Комментарий отклонён и удалён.');
     }
+    public function edit(Comment $comment)
+    {
+        $this->authorize('update', $comment);
 
+        return view('comments.edit', compact('comment'));
+    }
+
+    public function update(Request $request, Comment $comment)
+    {
+        $this->authorize('update', $comment);
+
+        $validated = $request->validate([
+            'content' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $comment->update([
+            'content' => $validated['content'],
+        ]);
+
+        Cache::forget('article_' . $comment->article_id);
+
+        return redirect()
+            ->route('articles.show', $comment->article_id)
+            ->with('success', 'Комментарий успешно изменён.');
+    }
     // Удаление комментария модератором
     public function destroy(Comment $comment)
     {

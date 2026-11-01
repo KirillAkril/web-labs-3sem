@@ -8,7 +8,6 @@ use App\Models\User;
 
 class CommentPolicy
 {
-    // Читатель и модератор могут добавлять комментарии
     public function create(User $user, Article $article): bool
     {
         return in_array(
@@ -18,17 +17,18 @@ class CommentPolicy
         );
     }
 
-    // Модератор может удалять любые комментарии
-    public function delete(User $user, Comment $comment): bool
-    {
-        return $user->role?->name === 'moderator';
-    }
-
-    // Модератор может изменять любые комментарии
     public function update(User $user, Comment $comment): bool
     {
-        return $user->role?->name === 'moderator';
+        return $user->role?->name === 'moderator'
+            || $comment->user_id === $user->id;
     }
+
+    public function delete(User $user, Comment $comment): bool
+    {
+        return $user->role?->name === 'moderator'
+            || $comment->user_id === $user->id;
+    }
+
     public function moderate(User $user): bool
     {
         return $user->role?->name === 'moderator';

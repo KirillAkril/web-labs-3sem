@@ -76,6 +76,12 @@
 
         <p>{{ $comment->content }}</p>
 
+        @can('update', $comment)
+        <a href="{{ route('comments.edit', $comment) }}">
+            Редактировать
+        </a>
+        @endcan
+
         @can('delete', $comment)
         <form
             action="{{ route('comments.destroy', $comment) }}"

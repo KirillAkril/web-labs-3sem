@@ -100,3 +100,10 @@ Route::get('/notifications/{id}', [
     \App\Http\Controllers\NotificationController::class,
     'show',
 ])->middleware('auth:sanctum')->name('notifications.show');
+Route::get('/comments/{comment}/edit', [CommentController::class, 'edit'])
+    ->middleware('auth:sanctum')
+    ->name('comments.edit');
+
+Route::put('/comments/{comment}', [CommentController::class, 'update'])
+    ->middleware('auth:sanctum')
+    ->name('comments.update');
